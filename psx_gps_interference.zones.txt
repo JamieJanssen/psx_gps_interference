@@ -1,0 +1,14 @@
+# PSX GPS Interference zones
+# Format:
+# NAME|TYPE|DESCRIPTION|QS572_VALUE
+#
+# QS572 format:
+# PT/pt/Pt/pT + zone_lat_rad;zone_lon_rad;min_radius_nm;radius_addition_nm;spoof_lat_rad;spoof_lon_rad;spoof_alt_ft;spoof_time_deviation_min;
+#
+# First character: P = position error enabled, p = off
+# Second character: T = time error enabled, t = off
+
+CYPRUS_SPOOF_01|SPOOF|Cyprus / Eastern Mediterranean GPS spoofing|Pt0.615519;0.581776;40;0;0;0.590823;0.619388;50;0;
+BLACKSEA_01|JAM|Black Sea west GPS jamming|Pt0.754278;0.540471;0;0;150;0.872665;0.698132;80;-60;
+BLACKSEA_02|JAM|Black Sea central GPS jamming|PT0.778416;0.592830;0;0;200;0.872665;0.698132;80;10;
+BLACKSEA_03|JAM|Black Sea east GPS jamming|Pt0.764454;0.698423;0;0;200;0.872665;0.698132;80;-60;
