@@ -25,7 +25,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-VERSION = "1.08"
+VERSION = "1.00"
 APP_NAME = "PSX GPS Interference"
 BASE_NAME = "psx_gps_interference"
 INI_FILE = f"{BASE_NAME}.ini"
@@ -34,6 +34,9 @@ ZONES_FILE = f"{BASE_NAME}.zones.txt"
 OFF_QS572 = "pt0;0;0;0;0;0;0;0;0;"
 DEFAULT_TRANSITION_BAND_PERCENT = 5.0
 DEFAULT_TRANSITION_MIN_SECONDS = 10.0
+STATUS_UPDATE_INTERVAL = 1.0
+SELECT_TIMEOUT_SECONDS = 0.25
+STATUS_START_ROW = 9
 EARTH_RADIUS_NM = 3440.065
 
 
@@ -74,6 +77,22 @@ def print_header() -> None:
 ============================================================
 """.strip()
     )
+
+
+def move_cursor(row: int, column: int = 1) -> None:
+    print(f"\033[{row};{column}H", end="")
+
+
+def clear_from_cursor() -> None:
+    print("\033[J", end="")
+
+
+def print_static_screen(psx_host: str, psx_port: int, zones_count: int) -> None:
+    clear_screen()
+    print_header()
+    print()
+    print(f"PSX: {psx_host}:{psx_port}    Zones loaded: {zones_count}")
+    print()
 
 
 def ensure_files() -> None:
@@ -367,57 +386,58 @@ def print_status(
     debug: bool = False,
     overlapping_zones: list[tuple[Zone, float, str]] | None = None,
 ) -> None:
-    clear_screen()
-    print_header()
-    print(f"PSX: {psx_host}:{psx_port}    Zones loaded: {len(zones)}")
-    print()
-
-    if position:
-        print(
-            f"Aircraft: LAT {position['lat_deg']:.6f}  "
-            f"LON {position['lon_deg']:.6f}  "
-            f"HDG {position['heading_deg']:.1f}  "
-            f"ALT {position['altitude_ft']:.0f} ft"
-        )
-    else:
-        print("Aircraft: waiting for Qs121...")
+    move_cursor(STATUS_START_ROW)
+    clear_from_cursor()
 
     if active_zone:
         print(
-            f"Zone:     {active_zone.name} ({active_zone.zone_type})  "
+            f"Zone:    {active_zone.name} ({active_zone.zone_type}) "
             f"{active_distance_nm:.0f}/{active_zone.max_effect_radius_nm:.0f} nm"
         )
-        print(f"          {active_zone.description}")
-    else:
-        print("Zone:     none")
+        print(f"Status:  {active_zone.description}")
 
-    if overlapping_zones:
-        other_overlaps = [
-            f"{zone.name} {state} {dist:.0f}nm"
-            for zone, dist, state in overlapping_zones
-            if not active_zone or zone.name != active_zone.name
-        ]
-        if other_overlaps:
-            print("Overlap:  " + ", ".join(other_overlaps[:3]))
-            if len(other_overlaps) > 3:
-                print(f"          +{len(other_overlaps) - 3} more")
-
-    print(f"Sent:     {last_sent_name}")
-    if zone_state == "TRANSITION":
-        status = "ON" if transition_enabled else "OFF"
-        print(f"Edge:     TRANSITION {status}  (+/-{transition_band_percent:.1f}% band, min {transition_min_seconds:.0f}s)")
+        if zone_state == "TRANSITION":
+            status = "ON" if transition_enabled else "OFF"
+            print(f"         Intermittent {status}")
+        elif zone_state == "ACTIVE":
+            print("         Active")
+        else:
+            print("         Off")
     else:
-        print(f"Edge:     {zone_state}")
+        print("Status:  Outside GPS interference zone")
+
     if debug:
         print()
         print("[DEBUG]")
+        if position:
+            print(
+                f"Aircraft: LAT {position['lat_deg']:.6f}  "
+                f"LON {position['lon_deg']:.6f}  "
+                f"HDG {position['heading_deg']:.1f}  "
+                f"ALT {position['altitude_ft']:.0f} ft"
+            )
+        else:
+            print("Aircraft: waiting for Qs121...")
+
+        print(f"Sent: {last_sent_name}")
+
+        if overlapping_zones:
+            other_overlaps = [
+                f"{zone.name} {state} {dist:.0f}nm"
+                for zone, dist, state in overlapping_zones
+                if not active_zone or zone.name != active_zone.name
+            ]
+            if other_overlaps:
+                print("Overlap: " + ", ".join(other_overlaps[:3]))
+                if len(other_overlaps) > 3:
+                    print(f"         +{len(other_overlaps) - 3} more")
+
         print(f"PSX Qi277 SpoofStatus: {qi277_status}")
         print(f"PSX Qi276 SpoofRadius: {qi276_radius}")
         print(f"PSX Qs573 GPS Drift:   {qs573_drift}")
 
     print()
     print("Press Ctrl+C to stop")
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PSX GPS Interference")
@@ -444,6 +464,7 @@ def main() -> None:
     psx.setblocking(False)
 
     psx_send(psx, "clientName=PSX GPS Interference")
+    print_static_screen(psx_host, psx_port, len(zones))
 
     buffer = ""
     latest_position = None
@@ -463,7 +484,7 @@ def main() -> None:
         while True:
             now = time.time()
 
-            readable, _, _ = select.select([psx], [], [], 0.25)
+            readable, _, _ = select.select([psx], [], [], SELECT_TIMEOUT_SECONDS)
 
             if psx in readable:
                 data = psx.recv(4096)
@@ -543,7 +564,7 @@ def main() -> None:
 
                 current_zone_state = zone_state
 
-            if now - last_status_time >= 1.0:
+            if now - last_status_time >= STATUS_UPDATE_INTERVAL:
                 print_status(
                     psx_host,
                     psx_port,
