@@ -12,12 +12,9 @@ All GPS jamming, spoofing, drift calculations, transition behaviour and avionics
 
 * Uses the native Aerowinx PSX GPS Jamming & Spoofing simulation
 * Automatic zone-based activation
-* Supports jamming, spoofing and mixed PSX scenarios
-* Unlimited user-defined interference zones
 * Overlapping zone management
 * Intermittent transition areas near zone boundaries
-* Optional debug mode
-* Lightweight standalone Python application
+* Lightweight standalone Python application (.EXE available)
 
 ## How It Works
 
