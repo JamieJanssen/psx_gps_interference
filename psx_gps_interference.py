@@ -25,7 +25,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-VERSION = "1.00"
+VERSION = "1.08"
 APP_NAME = "PSX GPS Interference"
 BASE_NAME = "psx_gps_interference"
 INI_FILE = f"{BASE_NAME}.ini"
@@ -104,8 +104,6 @@ def ensure_files() -> None:
 
 
 def read_config() -> tuple[str, int, float, float]:
-    ensure_files()
-
     config = configparser.ConfigParser()
     config.read(INI_FILE, encoding="utf-8")
 
@@ -156,7 +154,6 @@ def parse_qs572(qs572: str) -> tuple[float, float, float, float, float]:
 
 
 def load_zones() -> list[Zone]:
-    ensure_files()
     zones: list[Zone] = []
 
     for line_number, raw_line in enumerate(Path(ZONES_FILE).read_text(encoding="utf-8").splitlines(), start=1):
@@ -431,6 +428,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    ensure_files()
+
     psx_host, psx_port, transition_band_percent, transition_min_seconds = read_config()
     zones = load_zones()
 
@@ -464,7 +463,7 @@ def main() -> None:
         while True:
             now = time.time()
 
-            readable, _, _ = select.select([psx], [], [], 0.1)
+            readable, _, _ = select.select([psx], [], [], 0.25)
 
             if psx in readable:
                 data = psx.recv(4096)
@@ -541,7 +540,6 @@ def main() -> None:
 
                     current_zone_name = wanted_name
                     current_enabled = wanted_enabled
-                    current_zone_state = zone_state
 
                 current_zone_state = zone_state
 
