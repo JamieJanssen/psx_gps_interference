@@ -110,10 +110,10 @@ Examples:
 
 | Prefix | Description                                        |
 | ------ | -------------------------------------------------- |
-| PT     | Position spoofing and time spoofing enabled        |
-| Pt     | Position spoofing enabled, time spoofing disabled  |
-| pT     | Position spoofing disabled, time spoofing enabled  |
-| pt     | Position spoofing disabled, time spoofing disabled |
+| PT     | Position jamming/spoofing and time spoofing enabled        |
+| Pt     | Position jamming/spoofing enabled, time spoofing disabled  |
+| pT     | Position jamming/spoofing enabled(!), time spoofing enabled  |
+| pt     | Position jamming/spoofing disabled, time spoofing disabled |
 
 Example:
 
