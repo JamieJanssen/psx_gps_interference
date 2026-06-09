@@ -89,6 +89,50 @@ All GPS interference behaviour is simulated by Aerowinx PSX.
 
 This application simply selects and activates the appropriate Qs572 scenario based on the aircraft's position.
 
+### Qs572 Prefix Flags
+
+The first two characters of the Qs572 string control which parts of the PSX GPS interference scenario are enabled.
+
+Format:
+
+```text
+PT...
+```
+
+| Flag | Meaning                 |
+| ---- | ----------------------- |
+| P    | Position error enabled  |
+| p    | Position error disabled |
+| T    | Time error enabled      |
+| t    | Time error disabled     |
+
+Examples:
+
+| Prefix | Description                                        |
+| ------ | -------------------------------------------------- |
+| PT     | Position spoofing and time spoofing enabled        |
+| Pt     | Position spoofing enabled, time spoofing disabled  |
+| pT     | Position spoofing disabled, time spoofing enabled  |
+| pt     | Position spoofing disabled, time spoofing disabled |
+
+Example:
+
+```text
+Pt0.615519;0.581776;40;0;0;0.590823;0.619388;50;0;
+```
+
+This enables position spoofing while leaving GPS time unaffected.
+
+### Note
+
+The exact behaviour of the Position Error flag is determined by Aerowinx PSX. In practice it acts as the master enable for the GPS interference scenario. When disabling a scenario, this utility always sends:
+
+```text
+pt...
+```
+
+to ensure that all GPS interference effects are fully disabled.
+
 ### Example Zones
 
 Jamming only:
