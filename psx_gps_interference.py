@@ -24,8 +24,9 @@ import time
 import random
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
-VERSION = "1.00"
+VERSION = "1.01"
 APP_NAME = "PSX GPS Interference"
 BASE_NAME = "psx_gps_interference"
 INI_FILE = f"{BASE_NAME}.ini"
@@ -250,7 +251,7 @@ def psx_send(sock: socket.socket, line: str) -> bool:
         return False
 
 
-def parse_qs121(line: str) -> dict | None:
+def parse_qs121(line: str) -> Optional[dict]:
     if not line.startswith("Qs121="):
         return None
 
@@ -315,7 +316,7 @@ def find_zone_candidate(
     position: dict,
     zones: list[Zone],
     transition_band_percent: float,
-) -> tuple[Zone | None, float | None, str, list[tuple[Zone, float, str]]]:
+) -> tuple[Optional[Zone], Optional[float], str, list[tuple[Zone, float, str]]]:
     """
     Return the best relevant zone and state.
 
@@ -372,19 +373,19 @@ def print_status(
     psx_host: str,
     psx_port: int,
     zones: list[Zone],
-    position: dict | None,
-    active_zone: Zone | None,
-    active_distance_nm: float | None,
+    position: Optional[dict],
+    active_zone: Optional[Zone],
+    active_distance_nm: Optional[float],
     last_sent_name: str,
     zone_state: str,
-    transition_enabled: bool | None,
+    transition_enabled: Optional[bool],
     transition_band_percent: float,
     transition_min_seconds: float,
     qi277_status: str,
     qi276_radius: str,
     qs573_drift: str,
     debug: bool = False,
-    overlapping_zones: list[tuple[Zone, float, str]] | None = None,
+    overlapping_zones: Optional[list[tuple[Zone, float, str]]] = None,
 ) -> None:
     move_cursor(STATUS_START_ROW)
     clear_from_cursor()
@@ -469,9 +470,9 @@ def main() -> None:
     buffer = ""
     latest_position = None
     current_zone_name = "OFF"
-    current_enabled: bool | None = None
+    current_enabled: Optional[bool] = None
     current_zone_state = "OFF"
-    transition_enabled: bool | None = None
+    transition_enabled: Optional[bool] = None
     last_transition_switch_time = 0.0
     last_sent_name = "OFF"
     last_status_time = 0.0
